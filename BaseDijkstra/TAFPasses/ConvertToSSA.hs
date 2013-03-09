@@ -1,4 +1,4 @@
-module BaseDijkstra.TAFPasses.ConvertToSSA (intraBlockSSA, interBlockSSA', buildABBMap, buildEnterFromMap, resolveAllForwards, insertPhiLines, removeFinalAssigns, interBlockSSA2') where
+module BaseDijkstra.TAFPasses.ConvertToSSA (intraBlockSSA, interBlockSSA', buildABBMap, buildEnterFromMap, resolveAllForwards, insertPhiLines', removeFinalAssigns, interBlockSSA2', insertLinesAtBlkHead) where
 
 import BaseDijkstra.ThreeAddressForm
 import BaseDijkstra.SymbolTable as ST (VariableType(..))
@@ -6,7 +6,8 @@ import BaseDijkstra.TAFPasses.BuildBasicBlocks as BBB (BasicBlock(..))
 import qualified Data.HashMap as HashMap hiding ((!))
 import Data.HashMap ((!))
 import qualified Data.IntMap as IntMap
-import Data.List (union, isInfixOf, (\\))
+import Data.List (union, intersect, isInfixOf, (\\), sortBy)
+import Data.Monoid
 --import Debug.Trace
 --import System.IO.Unsafe
 
@@ -198,7 +199,7 @@ createForwardIdentifier currBlkNum oldId@(Identifier oldName vt) fwdStateVec =
         let (rawInstNum, _:rawBlkNum) = break (\x -> x == '.') rawInstBlkInd
         in (read rawInstNum :: Int, read rawBlkNum :: Int)
       else (read rawInstBlkInd :: Int, (-1))
-    fwdVal = HashMap.findWithDefault ({-trace ("\n\ncouldn't find " ++ (show name) ++ " in " ++ (show fwdStateVec) ++ "\n\n") $-} NumberedSelf 0 currBlkNum) (Identifier name vt) fwdStateVec
+    fwdVal = HashMap.findWithDefault (NumberedSelf 0 currBlkNum) (Identifier name vt) fwdStateVec
     --makeOptsStr [opt] = "(" ++ (show $ fst opt) ++ "," ++ (showOpState name $ snd opt) ++ ")"
     --makeOptsStr (opt:optns) = "(" ++ (show $ fst opt) ++ "," ++ (showOpState name $ snd opt) ++ "), " ++ (makeOptsStr optns)
     makeOptsStr [opt] = (showOpState name opt)
@@ -320,7 +321,7 @@ replaceAll s find repl =
         then repl ++ (replaceAll (drop (length find) s) find repl)
         else [head s] ++ (replaceAll (tail s) find repl)
 
-insertPhiLines :: BasicBlock -> BasicBlock
+{-insertPhiLines :: BasicBlock -> BasicBlock
 insertPhiLines bb =
   let
     oldLines = BBB.lines bb
@@ -354,8 +355,70 @@ insertPhiLines bb =
     replacePhiStr p = p
     (fstLine:filteredLines) = reverse $ map (applyToLineArguments replacePhiStr) oldLines
   in
-    BasicBlock (BBB.ind bb) (exitsTo bb) $ reverse ((fstLine:phiLines) ++ filteredLines)
+    BasicBlock (BBB.ind bb) (exitsTo bb) $ reverse ((fstLine:phiLines) ++ filteredLines) -}
 
+
+insertPhiLines' :: IntMap.IntMap [Int] -> BasicBlock -> (BasicBlock, IntMap.IntMap [ThreeAddressRecord])
+insertPhiLines' efm bb =
+  let
+    currBlkInd = BBB.ind bb
+    oldLines = BBB.lines bb
+    isPhi (Identifier n _) | ".phi" `isInfixOf` n = True
+    isPhi _ = False
+    getPhi ln =
+      let arr = case ln of
+                  ThreeAddressForm targ bop ls rs
+                    | bop /= CAST -> [targ,ls,rs]
+                    | otherwise -> [targ, rs]
+                  TwoAddressForm targ _ ar -> [targ, ar]
+                  SingleOperandForm uop ar | uop == OUTPUT -> [ar]
+                  TargetOnlyForm targ niop | niop == INPUT -> [targ]
+                  CondBranchForm cond _ _ -> [cond]
+                  other -> []
+      in filter isPhi arr
+    allPhis = foldl1 union $ map getPhi oldLines
+    phiLines = 
+      map (\(Identifier str vt) ->
+            let
+              (name, phiPart) = break ('.' == ) str
+              tmpPart = drop 5 phiPart
+              phiOptsStr = take (length tmpPart-1) tmpPart
+              phiStrList = splitOn ',' phiOptsStr
+              phiPairList = map (\str -> (read (last $ splitOn '.' str) :: Int, Identifier str vt)) phiStrList
+              sortedPhiPairList = sortBy (\a@(ind1, id1) b@(ind2, id2) -> (compare ind1 ind2) `mappend` (compare id1 id2)) phiPairList
+            in
+              PhiForm (Identifier (name ++ ".phi") vt) sortedPhiPairList) allPhis
+    replacePhiStr phiBlkInd (Identifier n vt) | "phi" `isInfixOf` n = Identifier ((fst $ break ('.' ==) n) ++ ".phi." ++ (show phiBlkInd)) vt
+    replacePhiStr phiBlkInd p = p
+    elevateFunc requiredNums (checkedList, targetBlk) indToCheck
+      | indToCheck `elem` checkedList = (checkedList, targetBlk)
+      | targetBlk > -2 = (indToCheck:checkedList, targetBlk)
+      | otherwise =
+        let thisEntersFrom = IntMap.findWithDefault [] indToCheck efm 
+        in 
+          if (length $ requiredNums `intersect` thisEntersFrom) > 0
+          then (indToCheck:checkedList, indToCheck)
+          else foldl (elevateFunc requiredNums) (indToCheck:checkedList, targetBlk) thisEntersFrom
+    entersFrom = IntMap.findWithDefault [] currBlkInd efm
+    mapFunc (PhiForm (Identifier targName vt) optns) =
+      let
+        requiredEFArr = map fst optns
+        elevateResultsFTB = elevateFunc requiredEFArr ([], -2) currBlkInd
+        finalRes = snd $ foldl (elevateFunc requiredEFArr) elevateResultsFTB entersFrom
+      in
+        (finalRes, PhiForm (Identifier (targName ++ "." ++ (show finalRes)) vt) optns)
+    resPairs = map mapFunc phiLines
+    filteredLines = foldl (\currLines (ind, _) -> map (applyToLineArguments $ replacePhiStr ind) currLines) oldLines resPairs
+  in
+    (BasicBlock (BBB.ind bb) (exitsTo bb) filteredLines, foldl (\currMap (ind, ln) -> IntMap.insertWith union ind [ln] currMap) IntMap.empty resPairs)
+
+insertLinesAtBlkHead :: BasicBlock -> [ThreeAddressRecord] -> BasicBlock
+insertLinesAtBlkHead bb tafs = 
+  let
+    oldLines = BBB.lines bb
+    (lblLine:otherLines) = reverse oldLines
+  in
+    BasicBlock (BBB.ind bb) (exitsTo bb) (reverse $ lblLine:tafs ++ otherLines)
 
 ---------------- BEGIN PASS 2 Code -----------------------
 
@@ -458,14 +521,15 @@ showOpState2 currVarName (NumberedSelf num bNum) = currVarName
 showOpState2 currVarName (NumberedForeign fOp num _ bNum) = (showIdent fOp)
 showOpState2 currVarName (ConstantVal v _) = v
 
+
 {-
 # NOINLINE traceAndPause #
 traceAndPause :: String -> a -> a
 traceAndPause string expr = unsafePerformIO $ do
   traceIO string
   getLine
-  return expr 
--}
+  return expr -}
+
 
 createForwardIdentifier2 :: Int -> Operand -> BBLookupMap -> IntMap.IntMap [Int] -> Operand
 createForwardIdentifier2 currBlkNum oldId@(Identifier oldName vt) bblm efm =

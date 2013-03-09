@@ -14,6 +14,8 @@ import qualified BaseDijkstra.ThreeAddressForm as TAR
 import Text.ParserCombinators.Parsec (runParser)
 import qualified Data.HashMap as HashMap
 import qualified Data.IntMap as IntMap
+import Data.List (union)
+import Debug.Trace
 
 
 -- n = BranchNode VARDECL [LeafNode FLOAT "3.14159", LeafNode INT "3", LeafNode FLOAT "123.45"] Nothing
@@ -109,11 +111,17 @@ buildAlmostFin prog =
 buildFinalBB prog =
   let
     bbWithSSA = buildAlmostFin prog
+    efm = TAFCTS.buildEnterFromMap $ (map (\x -> (x, HashMap.empty))) bbWithSSA
     blockOrder = map TAFBBB.ind bbWithSSA
-    bbWithPhiLines = map TAFCTS.insertPhiLines bbWithSSA
+    bbPairsWithPhi = map (TAFCTS.insertPhiLines' efm) bbWithSSA
+    pbblm = foldl (\lm (bb,_) -> IntMap.insert (TAFBBB.ind bb) bb lm) IntMap.empty bbPairsWithPhi
+    updatesMap = foldl (\um (_, mp) -> IntMap.unionWith union mp um) IntMap.empty bbPairsWithPhi
+    bbWithPhiLinesMap = IntMap.union (IntMap.mapWithKey (\ind lns -> TAFCTS.insertLinesAtBlkHead (pbblm IntMap.! ind) lns) updatesMap) pbblm
+    bbWithPhiLines = map (\ind -> bbWithPhiLinesMap IntMap.! ind) blockOrder
+    --bbWithPhiLines = map TAFCTS.insertPhiLines bbWithSSA
     bbFinal1 = map (TAFCTS.removeFinalAssigns HashMap.empty) bbWithPhiLines
     bblm = TAFCTS.buildABBMap bbFinal1
-    efm = TAFCTS.buildEnterFromMap bbFinal1
+    --efm = TAFCTS.buildEnterFromMap bbFinal1
     bbFinal = TAFCTS.interBlockSSA2' bblm efm blockOrder
   in bbFinal
 

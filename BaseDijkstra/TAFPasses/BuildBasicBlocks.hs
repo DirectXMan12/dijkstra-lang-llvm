@@ -53,7 +53,7 @@ labelLine = do
   lblInd <- label
   lastLineWasBranch <- getState
   let resPrefix = if lastLineWasBranch /= True
-                    then [EndWithoutFinalEntry [lblInd]]
+                    then [AddFinalEntryToCurrent (UncondBranchForm (LabelIdentifier lblInd)) [lblInd]]
                     else []
   setState False
   return $ resPrefix ++ [StartNew lblInd (LabelForm lblInd)]
