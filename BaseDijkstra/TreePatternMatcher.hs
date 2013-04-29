@@ -1,4 +1,4 @@
-module BaseDijkstra.TreePatternMatcher (Reply(..), TreeParser(..), leafOfType, branchOfType, anyNode, _V_, _A_, (<|>), (<+>), (<|->), (<?>), (<:>), many, many1, visitNextSibling, getCurrNode, getUserState, setUserState, parse, parseForResult) where
+module BaseDijkstra.TreePatternMatcher (Reply(..), TreeParser(..), leafOfType, branchOfType, anyNode, _V_, _A_, (<|>), (<+>), (<|->), (<?>), (<:>), many, many1, visitNextSibling, getCurrNode, getUserState, setUserState, parse, parseForResult, parseForEither, TreeParseError) where
 import BaseDijkstra.NaryTreeZipper
 import Control.Monad
 import Data.Monoid
@@ -22,6 +22,12 @@ parseForResult tp tr st = case parse tp tr st of
   Ok _ _ r -> Just r
   DidNothing _ _ -> Nothing
   Error zip _ msg -> error ("[at " ++ show zip ++ "] " ++ msg)
+
+parseForEither :: (Show cst, Show tr) => TreeParser tr cst st res -> tr -> st -> Either TreeParseError res
+parseForEither tp tr st = case parse tp tr st of
+  Ok _ _ r -> Right r
+  DidNothing _ _ -> Left "No result returned"
+  Error zip _ msg -> Left ("[at " ++ show zip ++ "] " ++ msg)
   
 -- Instance Declarations --
 

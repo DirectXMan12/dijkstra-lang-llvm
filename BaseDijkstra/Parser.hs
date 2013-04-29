@@ -1,9 +1,9 @@
 {-# LANGUAGE DeriveGeneric #-}
-module BaseDijkstra.Parser (parseDijkstra, DijkstraTree(..), NodeType(..)) where
+module BaseDijkstra.Parser (parseDijkstra, parseDijkstraWithSrc, DijkstraTree(..), NodeType(..)) where
 import Text.ParserCombinators.Parsec
 import Text.Parsec.Pos
 import BaseDijkstra.Scanner
-import BaseDijkstra.Lexer (lexDijkstra)
+import BaseDijkstra.Lexer (lexDijkstra, lexDijkstraWithSrc)
 import GHC.Generics (Generic)
 import Data.Hashable
 
@@ -36,6 +36,9 @@ type DijkstraParser = GenDijkstraParser DijkstraTree
 
 parseDijkstra :: String -> Either ParseError DijkstraTree
 parseDijkstra code = (lexDijkstra code) >>= (runParser program (initialPos "(source unknown)") "(source unknown)")
+
+parseDijkstraWithSrc :: String -> String -> Either ParseError DijkstraTree
+parseDijkstraWithSrc code srcName = (lexDijkstraWithSrc code srcName) >>= (runParser program (initialPos srcName) srcName)
 
 program :: DijkstraParser
 program = do

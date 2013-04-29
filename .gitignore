@@ -1,2 +1,8 @@
 *~
 *.swp
+*.swo
+*.o
+*.s
+*.hi
+*.bc
+dcc

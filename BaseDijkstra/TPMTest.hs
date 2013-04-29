@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
-module BaseDijkstra.TPMTest (prog, STM(..),vardecl) where
+module BaseDijkstra.TPMTest (prog, STM(..),vardecl,fullProg) where
 
 import BaseDijkstra.NaryTreeZipper
 import BaseDijkstra.Parser (DijkstraTree(..), NodeType(..))
@@ -28,6 +28,12 @@ instance Monoid STM where
     (mempty `mappend` STM subst1 (Just node1)) `mappend` STM subst2 (Just node2)
 
 type DjkTreeParser a = TreeParser DijkstraTree NodeType () a
+
+fullProg :: DjkTreeParser STM
+fullProg = do
+  branchOfType PROGRAM; _V_; 
+  visitNextSibling; 
+  prog
 
 prog :: DjkTreeParser STM
 prog = progLines

@@ -1,4 +1,4 @@
-module BaseDijkstra.Lexer (Token, Tok(..), DijkstraLexer, tokenizedDijkstra, lexDijkstra) where
+module BaseDijkstra.Lexer (Token, Tok(..), DijkstraLexer, tokenizedDijkstra, lexDijkstra, lexDijkstraWithSrc) where
 import Text.ParserCombinators.Parsec
 
 type Token = (SourcePos, Tok)
@@ -20,6 +20,9 @@ tokenizedDijkstra = do
 
 lexDijkstra :: String -> Either ParseError [Token]
 lexDijkstra code = parse tokenizedDijkstra "(source unknown)" code
+
+lexDijkstraWithSrc :: String -> String -> Either ParseError [Token]
+lexDijkstraWithSrc code srcName = parse tokenizedDijkstra srcName code
   
 lexeme p = do
   x <- p

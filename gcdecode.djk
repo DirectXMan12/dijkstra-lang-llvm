@@ -1,0 +1,12 @@
+program euclid
+ int a, b
+ input a,b
+ do
+   (b ~= 0) :: {
+     int t
+     t <- b
+     b <- a mod b
+     a <- t
+   }
+ od
+ print a
