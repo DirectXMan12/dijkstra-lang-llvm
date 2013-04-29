@@ -41,18 +41,18 @@ Building simply requires running `ghc-make dcc`
 Usage
 -----
 
-   Usage dcc [OPTION...] inputfile
-     -h, -?          --help                    Show this help
-     -l, -j          --emit-llvm, --emit-ir    Output the compiled LLVM IR to inputfile.ll
-     -p PACKAGENAME  --package=PACKAGENAME     Currently does nothing, since packages don't mean anything to LLVM
-     -s              --emit-symbol-table       Output the symbol table to inputfile.st
-     -r              --emit-tree, --emit-ast   Output the intial AST to inputfile.tr
-     -t              --emit-taf                Output the final Three Address Form SSA code to inputfile.taf
-     -v              --verbose                 Print extra compilation details
-     -b              --emit-bitcode            Emit LLVM bitcode (requires an llvm installation) using `llvm-link` -- outputs to inputfile.llb
-     -c              --compile, --emit-binary  Emit a system appropriate binary executable (requires an LLVM installation and a linker aliased as `ld`) -- outputs to inputfile
-     -r              --run-program             Does not emit anything by itself.  Instead, runs the program bitcode on llvm
-     -o FILENAME     --output=FILENAME         Set the output file name to OUTPUTNAME instead of inputfile
+    Usage dcc [OPTION...] inputfile
+      -h, -?          --help                    Show this help
+      -l, -j          --emit-llvm, --emit-ir    Output the compiled LLVM IR to inputfile.ll
+      -p PACKAGENAME  --package=PACKAGENAME     Currently does nothing, since packages don't mean anything to LLVM
+      -s              --emit-symbol-table       Output the symbol table to inputfile.st
+      -r              --emit-tree, --emit-ast   Output the intial AST to inputfile.tr
+      -t              --emit-taf                Output the final Three Address Form SSA code to inputfile.taf
+      -v              --verbose                 Print extra compilation details
+      -b              --emit-bitcode            Emit LLVM bitcode (requires an llvm installation) using `llvm-link` -- outputs to inputfile.llb
+      -c              --compile, --emit-binary  Emit a system appropriate binary executable (requires an LLVM installation and a linker aliased as `ld`) -- outputs to inputfile
+      -r              --run-program             Does not emit anything by itself.  Instead, runs the program bitcode on llvm
+      -o FILENAME     --output=FILENAME         Set the output file name to OUTPUTNAME instead of inputfile
 
 
 
