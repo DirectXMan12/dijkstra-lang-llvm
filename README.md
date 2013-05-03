@@ -21,11 +21,13 @@ The following (additional) Haskell packages are required (in addition to the bas
 
 ### Modifications to LLVM ###
 
-The compiler uses a couple modifications to the LLVM (Haskell) libraries.  The code used merely requires
-a couple of methods to be made public, and a couple lines of Haskell FFI to be written.  More instructions to follow 
-when I figure out/remember what exactly I changed.  It suffices to simply
-disable the LLVM sections of the code if you do not wish to make the modification.  The
-compiler will still be able to output LLVM IR, just not the LLVM bitcode.
+The compiler uses a couple modifications to the LLVM (Haskell) libraries.  The code used merely 
+requires a couple of methods to be made public, and a couple lines of Haskell FFI to be written.
+More instructions to follow when I figure out/remember what exactly I changed.  
+~~It suffices to simply disable the LLVM sections of the code if you do not wish to make the 
+modifications yourself~~ **Just use `dcc-simple INPUTFILE` if you do not wish to figure 
+out the changes yourself**.  The compiler will still be able to output LLVM IR, just not the 
+LLVM bitcode.
 
 Dijkstra Language
 -----------------

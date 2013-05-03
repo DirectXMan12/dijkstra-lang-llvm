@@ -1,6 +1,6 @@
-@.str2 = private unnamed_addr constant [21 x i8] c"Enter b.1.-1 [INT]: \00", align 1
 @.str3 = private unnamed_addr constant [13 x i8] c"a.phi.0: %d\0A\00", align 1
 @.str1 = private unnamed_addr constant [21 x i8] c"Enter a.1.-1 [INT]: \00", align 1
+@.str2 = private unnamed_addr constant [21 x i8] c"Enter b.1.-1 [INT]: \00", align 1
 @.floatfmt = private unnamed_addr constant [4 x i8] c"%lf\00", align 1
 @.intfmt = private unnamed_addr constant [4 x i8] c"%ld\00", align 1
 @.boolfmt = private unnamed_addr constant [4 x i8] c"%1d\00", align 1
