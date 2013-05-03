@@ -6,7 +6,7 @@ A Dijkstra-to-LLVM-bitcode compiler written in Haskell
 Overview
 --------
 
-This haskell compiler compiles a version of the Dijkstra programming language (see below) into
+This compiler (written in Haskell) compiles a version of the Dijkstra programming language (see below) into
 LLVM IR or LLVM bitcode.  The resulting bitcode may be run with `lli`, and the IR may be
 compiled to assembly, which can then be compiled using your compiler of choice into a system
 executable
@@ -16,18 +16,22 @@ Requirements
 
 The following (additional) Haskell packages are required (in addition to the base libraries):
 
-* Parsec (Text.ParsecCombinators) 
-* LLVM (llvm) -- modified (see below)
+* Parsec (Text.ParserCombinators.Parsec) 
+* llvm (LLVM) -- modified (see below)
 
-### Modifications to LLVM ###
+### Modifications to LLVM/Not Using LLVM ###
 
 The compiler uses a couple modifications to the LLVM (Haskell) libraries.  The code used merely 
 requires a couple of methods to be made public, and a couple lines of Haskell FFI to be written.
-More instructions to follow when I figure out/remember what exactly I changed.  
-~~It suffices to simply disable the LLVM sections of the code if you do not wish to make the 
-modifications yourself~~ **Just use `dcc-simple INPUTFILE` if you do not wish to figure 
-out the changes yourself**.  The compiler will still be able to output LLVM IR, just not the 
-LLVM bitcode.
+
+If you do not wish to install the LLVM dev libraries or do not wish to use the modifications, 
+you can compile as `ghc --make dcc-simple` and run as `dcc-simple INPUTFILE`.  The compiler 
+will still be able to output LLVM IR, just not the LLVM bitcode.
+
+Otherwise, you can install the Haskell LLVM libraries from my fork of the official repository
+at https://github.com/DirectXMan12/llvm instead, until the requisite changes get merged into
+the main Haskell LLVM library.
+
 
 Dijkstra Language
 -----------------
