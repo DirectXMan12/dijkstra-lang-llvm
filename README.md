@@ -17,20 +17,22 @@ Requirements
 The following (additional) Haskell packages are required (in addition to the base libraries):
 
 * Parsec (Text.ParserCombinators.Parsec) 
-* llvm (LLVM) -- modified (see below)
+* llvm (LLVM) -- ~~modified (see below)~~
 
 ### Modifications to LLVM/Not Using LLVM ###
 
-The compiler uses a couple modifications to the LLVM (Haskell) libraries.  The code used merely 
-requires a couple of methods to be made public, and a couple lines of Haskell FFI to be written.
+~~The compiler uses a couple modifications to the LLVM (Haskell) libraries.  The code used merely 
+requires a couple of methods to be made public, and a couple lines of Haskell FFI to be written.~~
 
-If you do not wish to install the LLVM dev libraries or do not wish to use the modifications, 
+If you do not wish to install the LLVM dev libraries ~~or do not wish to use the modifications,~~
 you can compile as `ghc --make dcc-simple` and run as `dcc-simple INPUTFILE`.  The compiler 
 will still be able to output LLVM IR, just not the LLVM bitcode.
 
-Otherwise, you can install the Haskell LLVM libraries from my fork of the official repository
+~~Otherwise, you can install the Haskell LLVM libraries from my fork of the official repository
 at https://github.com/DirectXMan12/llvm instead, until the requisite changes get merged into
-the main Haskell LLVM library.
+the main Haskell LLVM library.~~  The latest Haskell LLVM libraries can be used.  Make sure to use
+the latest sources from the github repository at https://github.com/bos/llvm (feature introduced in 
+bos/llvm@3dc9717a0c23a95002bd22fffe29e7909c387f0d)
 
 
 Dijkstra Language
